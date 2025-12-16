@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const QuizSchema = new mongoose.Schema({
-  
+
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -30,31 +30,33 @@ const QuizSchema = new mongoose.Schema({
 
     explanation: { type: String, default: '' },
 
-    difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' }, 
+    difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' },
   }],
 
   userAnswers: [{
 
-    questionIndex: { type: Number, required: true },
-   
-    selectedAnswer: { type: String, required: true,},
-   
-    isCorrect: { type: Boolean, required: true },
-   
-    answeredAt: {type: Date, defualt: Date.now},
+    questionIndex: { type: Number },
+
+    selectedAnswer: { type: String },
+
+    isCorrect: { type: Boolean, },
+
+    answeredAt: { type: Date, default: Date.now },
   }],
 
   score: { type: Number, default: 0 },
 
-  totalQuestions: { type: Number, required: true},
+  totalQuestions: { type: Number, required: true },
+
+  completedAt: { type: Date, },
   
-  completedAt: { type: Date, default: null},
-  
-  
-}, {timestamps: true});
+  isCompleted: { type: Boolean, default: false },
 
 
-QuizSchema.index({user: 1, docuemnt: 1});
+}, { timestamps: true });
+
+
+QuizSchema.index({ user: 1, document: 1 });
 
 
 const Quiz = mongoose.model('Quiz', QuizSchema);

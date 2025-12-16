@@ -3,10 +3,10 @@ import mongoose from 'mongoose';
 const DocumentSchema = new mongoose.Schema({
 
   user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
 
   title: {
     type: String,
@@ -14,7 +14,7 @@ const DocumentSchema = new mongoose.Schema({
     trim: true,
   },
 
-  S3Data: { 
+  S3Data: {
     fileName: { type: String, required: true },
     folder: { type: String, required: true },
     mimeType: { type: String, required: true },
@@ -24,31 +24,31 @@ const DocumentSchema = new mongoose.Schema({
 
   fileSize: { type: Number, required: true },
 
-  extractedText: { type: String, default: '' },
+  extractedText: {
+    fileName: { type: String },
+    folder: { type: String },
+    mimeType: { type: String },
+  },
 
-  chunks: [{
+  geminiFileUri: { type: String, default: null },
 
-    content: { type: String, required: true },
-    
-    pageNumber: { type: Number, default: 0 },
-    
-    chunkIndex: { type: Number, required: true },
-  }],
+  geminiUriExpirationDate: { type: Date, default: null }, // valid only for 48h
 
-  uploadDate: { type: Date, default: Date.now},
-  
-  lastAccess: { type: Date, default: Date.now},
+
+  uploadDate: { type: Date, default: Date.now },
+
+  lastAccess: { type: Date, default: Date.now },
 
   status: {
     type: String,
     enum: ['processing', 'ready', 'failed', 'deleted'],
     default: 'processing',
   },
-  
-}, {timestamps: true});
+
+}, { timestamps: true });
 
 
-DocumentSchema.index({user: 1, uploadDate: -1});
+DocumentSchema.index({ user: 1, uploadDate: -1 });
 
 
 const Document = mongoose.model('Document', DocumentSchema);

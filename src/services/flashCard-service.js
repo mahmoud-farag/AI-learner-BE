@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { FlashCard } from '../models/index.js';
 import { customErrors } from '../utils/index.js';
 
@@ -49,13 +50,13 @@ flashCardsService.reviewFlashcard = async (params = {}) => {
   try {
     const { flashCardId, userId } = params;
 
-    const flashcardSet = await FlashCard.findOne({ 'cards._id': flashCardId, user: userId });
+    const flashcardSet = await FlashCard.findOne({ 'flashcards._id': new mongoose.Types.ObjectId(flashCardId) , user: userId });
 
     if (!flashcardSet) 
       throw new NotFoundError('Flashcard set or card not found')
     
 
-    const cardIndex = flashcardSet.cards.findIndex(card => card._id.toString() === flashCardId);
+    const cardIndex = flashcardSet.flashcards.findIndex(card => card._id.toString() === flashCardId);
 
     if (cardIndex === -1) 
       throw new NotFoundError('Card not found in set')
@@ -64,13 +65,13 @@ flashCardsService.reviewFlashcard = async (params = {}) => {
     
 
     // Update review info
-    flashcardSet.cards[cardIndex].lastReviewed = new Date();
-    flashcardSet.cards[cardIndex].reviewCount += 1;
+    flashcardSet.flashcards[cardIndex].lastReviewed = new Date();
+    flashcardSet.flashcards[cardIndex].reviewCount += 1;
 
     await flashcardSet.save();
 
 
-    return { flashcardSet, message };
+    return { flashcardSet };
 
   } catch(error) {
 
@@ -85,25 +86,25 @@ flashCardsService.toggleStarFlashcard = async (params = {}) => {
     
     const { flashCardId, userId } = params;
 
-    const flashcardSet = await FlashCard.findOne({ 'cards._id': flashCardId, user: userId });
+    const flashcardSet = await FlashCard.findOne({ 'flashcards._id': flashCardId, user: userId });
 
     if (!flashcardSet) 
       throw new NotFoundError('Flashcard set or card not found')
     
 
-    const cardIndex = flashcardSet.cards.findIndex(card => card._id.toString() === flashCardId);
+    const cardIndex = flashcardSet.flashcards.findIndex(card => card._id.toString() === flashCardId);
 
     if (cardIndex === -1) 
       throw new NotFoundError('Card not found in set')
 
 
     // Toggle star
-    flashcardSet.cards[cardIndex].isStarred = !flashcardSet.cards[cardIndex].isStarred;
+    flashcardSet.flashcards[cardIndex].isStarred = !flashcardSet.flashcards[cardIndex].isStarred;
 
     await flashcardSet.save();
 
 
-    return { flashcardSet,  message: `Flashcard ${flashcardSet.cards[cardIndex].isStarred ? 'starred' : 'unstarred'}` };
+    return { flashcardSet, message: `Flashcard ${flashcardSet.flashcards[cardIndex].isStarred ? 'starred' : 'unstarred' }` };
 
   } catch(error) {
 
@@ -118,7 +119,7 @@ flashCardsService.deleteFlashcardSet = async (params = {}) => {
     const { flashCardId, userId } = params;
 
 
-    const flashcardSet = await FlashCard.findOne({ 'cards._id': flashCardId, user: userId });
+    const flashcardSet = await FlashCard.findOne({ _id: flashCardId, user: userId });
 
     if (!flashcardSet) 
       throw new NotFoundError('Flashcard set or card not found')

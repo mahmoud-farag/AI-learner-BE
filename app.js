@@ -1,7 +1,6 @@
 // Must be the first import to ensure env vars are loaded before other imports (ESM hoisting)
 import './src/config/env.js';
 
-
 import express from 'express';
 import cors from 'cors';
 
@@ -9,7 +8,7 @@ import cors from 'cors';
 import connectToDB from './src/config/db.js'
 import { errorHandler } from './src/middlewares/index.js';
 import { customErrors } from './src/utils/index.js';
-import { authRoute, documentRoute, cardRoute, aiRoute } from './src/routes/index.js';
+import { authRoute, documentRoute, flashcardRoute, aiRoute, quizRoute, dashboardRoute } from './src/routes/index.js';
 
 const { NotFoundError } = customErrors;
 
@@ -20,7 +19,7 @@ app.use(cors({
   origin: "*",      // DANGEROUS for Prod: Allows ANY website to call your API
   methods: ['GET', 'POST', 'DELETE', 'PATCH'],
   credentials: true // Allow cookies/headers to be passed back and forth
-})); 
+}));
 
 
 app.use(express.json());
@@ -28,8 +27,10 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoute);
 app.use('/api/document', documentRoute);
-app.use('/api/card', cardRoute);
+app.use('/api/flashcard', flashcardRoute);
 app.use('/api/ai', aiRoute);
+app.use('/api/quiz', quizRoute);
+app.use('/api/dashboard', dashboardRoute);
 
 
 // not found route

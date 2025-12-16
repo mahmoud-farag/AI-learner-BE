@@ -2,6 +2,9 @@ import mongoose from 'mongoose';
 
 const ChatHistorySchema = new mongoose.Schema({
 
+  eventType: { type: String, required: true },
+  eventDate: { type: Date, default: Date.now },
+
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -15,18 +18,25 @@ const ChatHistorySchema = new mongoose.Schema({
   },
 
 
-  message: [{
+  message: {
     
-    role: { type: String, enum: ['user', 'assistent'], required: true },
+    role: { type: String, enum: ['user', 'assistant'], required: true },
     
-    content: { type: String, required: true },
-
-    relevantChunks: { type : [Number], default: [] },
-  }],
+    answer: { type: String },
+    question: { type: String },
 
 
+    relevantChunks: { 
+      type : [mongoose.Schema.Types.ObjectId], 
+      ref: 'DocumentChunk',
+      required: true,
+      default: [] 
+    },
+  },
 
-}, { timestamps: true});
+
+
+}, { timestamps: true });
 
 
 ChatHistorySchema.index({ user: 1, document: 1 });

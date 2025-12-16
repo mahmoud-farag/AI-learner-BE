@@ -17,11 +17,7 @@ documentController.uploadDocument = async (req, res, next) => {
     if (!req?.file)
       throw new BadRequestError('Pdf File not provided in the payload');
 
-    const params = {
-      payload: req.body,
-      file: req.file,
-      userId: req.user._id,
-    };
+    const params = { payload: req.body, file: req.file,  userId: req.user._id };
 
     const { document } = await documentService.uploadPdfDocument(params);
 

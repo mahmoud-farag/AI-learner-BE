@@ -49,9 +49,10 @@ flashCardsController.reviewFlashcard = async (req, res, next) => {
     if (!req.params?.flashCardId) 
       throw new BadRequestError('Flashcard Id is required');
 
-    const result = await flashCardsService.reviewFlashcard({ flashCardId: req.params.flashCardId, userId: req.user._id });
+    const { flashcardSet, message} = await flashCardsService.reviewFlashcard({ flashCardId: req.params.flashCardId, userId: req.user._id });
 
-    return handleSuccessResponse({ res, data: { ...result } });
+   
+    return handleSuccessResponse({ res, data: { flashcardSet }, message: message ?? 'Card is reviewed successfully' });
 
   } catch(error) {
 
@@ -67,9 +68,9 @@ flashCardsController.toggleStarFlashcard = async (req, res, next) => {
     if (!req.params?.flashCardId) 
       throw new BadRequestError('Flashcard Id is required');
    
-    const result = await flashCardsService.toggleStarFlashcard({ flashCardId: req.params.flashCardId, userId: req.user._id });
+    const { flashcardSet, message } = await flashCardsService.toggleStarFlashcard({ flashCardId: req.params.flashCardId, userId: req.user._id });
 
-    return handleSuccessResponse({ res, data: { ...result } });
+    return handleSuccessResponse({ res, data: { flashcardSet }, message: message ?? 'Card toggeled successfully' });
 
 
   } catch(error) {
@@ -85,9 +86,9 @@ flashCardsController.deleteFlashcardSet = async (req, res, next) => {
     if (!req.params?.flashCardId) 
       throw new BadRequestError('Flashcard Id is required');
 
-    const result = await flashCardsService.deleteFlashcardSet({ flashCardId: req.params.flashCardId, userId: req.user._id });
+    const { message } = await flashCardsService.deleteFlashcardSet({ flashCardId: req.params.flashCardId, userId: req.user._id });
    
-    return handleSuccessResponse({ res, data: { ...result } });
+    return handleSuccessResponse({ res, message : message ?? 'Card successfully deleted' });
 
   } catch(error) {
 

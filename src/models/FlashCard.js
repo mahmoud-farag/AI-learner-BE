@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const FlashCardSchema = new mongoose.Schema({
 
- user: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
@@ -14,12 +14,12 @@ const FlashCardSchema = new mongoose.Schema({
     required: true,
   },
 
-  cards: [
+  flashcards: [
     {
       question: { type: String, required: true },
-      
+
       answer: { type: String, required: true },
-      
+
       difficulty: {
         type: String,
         enum: ['easy', 'medium', 'hard'],
@@ -29,7 +29,7 @@ const FlashCardSchema = new mongoose.Schema({
       lastReviewed: { type: Date, default: null },
 
       reviewCount: { type: Number, default: 0 },
-      
+
       isStarred: { type: Boolean, default: false },
 
 
@@ -39,7 +39,7 @@ const FlashCardSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 
-FlashCardSchema.index({ user: 1, docuemnt: 1 });
+FlashCardSchema.index({ user: 1, document: 1 });
 
 
 const FlashCard = mongoose.model('FlashCard', FlashCardSchema);

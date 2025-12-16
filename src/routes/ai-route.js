@@ -1,7 +1,7 @@
 import express from 'express';
 
 import { aiController } from '../controllers/index.js';
-import { checkAuth } from '../middlewares/index.js';
+import { checkAuth, pagination  } from '../middlewares/index.js';
 
 const router = express.Router();
 
@@ -9,9 +9,9 @@ const router = express.Router();
 router.post('/generate-flashcards', checkAuth, aiController.generateFlashcards);
 router.post('/generate-quiz', checkAuth, aiController.generateQuiz);
 router.post('/generate-summary', checkAuth, aiController.generateSummary);
-router.post('/chat', checkAuth, chat);
+router.post('/chat', checkAuth, aiController.chat);
 router.post('/explain-concept', checkAuth, aiController.explainConcept);
-router.get('/chat-history/:documentId', checkAuth, aiController.getChatHistory);
+router.get('/chat-history/:documentId', checkAuth, pagination,  aiController.getChatHistory);
 
 
 
