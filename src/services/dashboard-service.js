@@ -22,7 +22,7 @@ dashboardService.getDashboardData = async (params = {}) => {
     const totalDocuments = await Document.countDocuments({ user, status: 'ready' });
     const totalFlashcardSets = await FlashCard.countDocuments({ user });
 
-    let  totalFlashcards = 0, reviewedFlashcards = 0, starredFlashcards = 0;
+    let totalFlashcards = 0, reviewedFlashcards = 0, starredFlashcards = 0;
 
 
     const cursor = FlashCard.find({ user })
@@ -30,10 +30,10 @@ dashboardService.getDashboardData = async (params = {}) => {
       .lean()
       .cursor();
 
-    for await ( const flashCardSet of cursor) {
+    for await (const flashCardSet of cursor) {
 
       for (const card of flashCardSet.flashcards) {
-        
+
         totalFlashcards += 1;
         reviewedFlashcards += card?.reviewCount ?? 0;
         starredFlashcards += card?.isStarred ? 1 : 0;
@@ -41,17 +41,17 @@ dashboardService.getDashboardData = async (params = {}) => {
     }
 
 
-    const totalQuizzes = await Quiz.countDocuments({ user, isCompleted: true });
+    const totalQuizzes = await Quiz.countDocuments({ user, isCompleted: true, status: 'active' });
 
 
-    const quizCursor = Quiz.find({ user, isCompleted: true })
+    const quizCursor = Quiz.find({ user, isCompleted: true, status: 'active' })
       .select('isCompleted score')
       .lean()
       .cursor();
 
-      
+
     let totalScore = 0, completedQuizzes = 0;
-    
+
     for await (const quiz of quizCursor) {
 
       if (quiz.isCompleted) {
@@ -60,11 +60,6 @@ dashboardService.getDashboardData = async (params = {}) => {
       }
 
     }
-
-    console.log('--totalScore:', );
-    console.log(totalScore);
-    console.log('---totalQuizzes---');
-    console.log(totalQuizzes);
 
     let averageScore = 0;
 
@@ -80,7 +75,7 @@ dashboardService.getDashboardData = async (params = {}) => {
       .limit(5)
       .select('title originalFileName lastAccess status');
 
-    const recentQuizzes = await Quiz.find({ user })
+    const recentQuizzes = await Quiz.find({ user, status: 'active' })
       .sort({ createdAt: -1 })
       .limit(5)
       .populate('document', 'title')
@@ -106,7 +101,7 @@ dashboardService.getDashboardData = async (params = {}) => {
       }
     }
 
-  } catch(error) {
+  } catch (error) {
 
     throw error;
   }

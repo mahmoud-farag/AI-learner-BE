@@ -52,6 +52,7 @@ const QuizSchema = new mongoose.Schema({
   
   isCompleted: { type: Boolean, default: false },
 
+  status: { type: String, enum: ['active', 'deleted'], default: 'active' },
 
 }, { timestamps: true });
 

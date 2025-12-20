@@ -11,11 +11,12 @@ QuizService.getQuizzes = async (params = {}) => {
     try {
 
         const { userId, paginationParams, documentId } = params;
-        const  { offset, limit } = paginationParams ?? {};
+        const { offset, limit } = paginationParams ?? {};
 
         const query = {
-            user: new mongoose.Types.ObjectId(userId), 
+            user: new mongoose.Types.ObjectId(userId),
             document: new mongoose.Types.ObjectId(documentId),
+            status: 'active',
         };
 
         const totalCount = await Quiz.countDocuments(query);
@@ -23,8 +24,8 @@ QuizService.getQuizzes = async (params = {}) => {
         const quizzes = await Quiz.find(query)
             .sort({ createdAt: -1 })
             .select('title score totalQuestions completedAt createdAt document user')
-            .populate({ path: 'user', select: 'username'})
-            .populate({ path: 'document', select: 'originalFileName title'})
+            .populate({ path: 'user', select: 'username' })
+            .populate({ path: 'document', select: 'originalFileName title' })
             .skip(offset)
             .limit(limit)
             .lean();
@@ -42,7 +43,7 @@ QuizService.getQuizById = async (params = {}) => {
 
         const { quizId, userId } = params;
 
-        const quiz = await Quiz.findOne({ _id: quizId, user: userId });
+        const quiz = await Quiz.findOne({ _id: quizId, user: userId, status: 'active' }).lean();
 
         if (!quiz)
             throw new NotFoundError('Quiz not found');
@@ -59,15 +60,15 @@ QuizService.getQuizById = async (params = {}) => {
 QuizService.submitQuiz = async (params = {}) => {
     try {
 
-        const { quizId, userId, answers } = params;
+        let { quizId, userId, answers } = params;
 
-        const quiz = await Quiz.findOne({ _id: quizId, user: userId });
+        const quiz = await Quiz.findOne({ _id: quizId, user: userId, status: 'active' }).select('questions isCompleted totalQuestions').lean();
 
         if (!quiz)
             throw new NotFoundError('Quiz not found');
 
 
-        if (quiz.completedAt)
+        if (quiz.isCompleted)
             throw new BadRequestError('Quiz already completed');
 
         let score = 0;
@@ -79,39 +80,58 @@ QuizService.submitQuiz = async (params = {}) => {
             throw new BadRequestError('Answers must be an array');
 
 
+        const questionsTracker = new Set();
+        const duplicatedQuestions = new Set();
+        let overHeadAnswers = [];
+
+
+        if (answers.length > quiz.totalQuestions) {
+            overHeadAnswers = answers.slice(quiz.totalQuestions - 1);
+            answers = answers.slice(0, quiz.totalQuestions - 1);
+        }
+
+
         // Process each answer
         for (const answer of answers) {
             const { questionIndex, selectedAnswer } = answer;
 
             if (questionIndex >= 0 && questionIndex < questions.length) {
+
                 const question = questions[questionIndex];
                 const isCorrect = question.correctAnswer === selectedAnswer;
+
+                if (questionsTracker.has(questionIndex)) {
+
+                    duplicatedQuestions.add(questionIndex)
+                    continue;
+
+                } else {
+                    questionsTracker.add(questionIndex);
+                }
+
 
                 if (isCorrect) {
                     score++;
                 }
 
-                userAnswers.push({
-                    questionIndex,
-                    selectedAnswer,
-                    isCorrect,
-                    answeredAt: new Date()
-                });
+                userAnswers.push({ questionIndex, selectedAnswer, isCorrect, answeredAt: new Date() });
             }
         }
 
-        // Update quiz
-        quiz.userAnswers = userAnswers;
-        quiz.score = score;
-        quiz.completedAt = new Date();
+        const updatedFields = { userAnswers, score, completedAt: new Date(), isCompleted: true };
 
-        await quiz.save();
 
-        return {
-            score,
-            totalQuestions: quiz.totalQuestions,
-            userAnswers
-        };
+        await Quiz.updateOne({ _id: quiz._id }, { $set: updatedFields });
+
+        const response = { score, totalQuestions: quiz.totalQuestions, userAnswers };
+
+        if (overHeadAnswers.length)
+            response.overHeadAnswers = overHeadAnswers;
+
+        if (duplicatedQuestions.size)
+            response.duplicatedQuestions = Array.from(duplicatedQuestions);
+
+        return response;
 
 
     } catch (error) {
@@ -126,7 +146,7 @@ QuizService.getQuizResults = async (params = {}) => {
 
         const { quizId, userId } = params;
 
-        const quiz = await Quiz.findOne({ _id: quizId, user: userId });
+        const quiz = await Quiz.findOne({ _id: quizId, user: userId, status: 'active' }).select('completedAt userAnswers totalQuestions completedAt score').lean();
 
         if (!quiz)
             throw new NotFoundError('Quiz not found');
@@ -140,7 +160,7 @@ QuizService.getQuizResults = async (params = {}) => {
             score: quiz.score,
             totalQuestions: quiz.totalQuestions,
             userAnswers: quiz.userAnswers,
-            completedAt: quiz.completedAt
+            completedAt: quiz.completedAt,
         };
 
     } catch (error) {
@@ -154,10 +174,13 @@ QuizService.deleteQuiz = async (params = {}) => {
 
         const { quizId, userId } = params;
 
-        const quiz = await Quiz.findOneAndDelete({ _id: quizId, user: userId });
+        const quiz = await Quiz.findOne({ user: userId, _id: quizId, status: 'active' }).select('_id').lean();
 
         if (!quiz)
             throw new NotFoundError('Quiz not found');
+
+
+        await Quiz.updateOne({ _id: quiz._id }, { $set: { status: 'deleted' } });
 
 
         return { message: 'Quiz deleted successfully' };

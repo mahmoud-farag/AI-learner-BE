@@ -13,7 +13,7 @@ import { authRoute, documentRoute, flashcardRoute, aiRoute, quizRoute, dashboard
 const { NotFoundError } = customErrors;
 
 const app = express();
-const PORT = process.env.PORT ?? 3000;
+const PORT = process.env.PORT ?? 4000;
 
 app.use(cors({
   origin: "*",      // DANGEROUS for Prod: Allows ANY website to call your API
